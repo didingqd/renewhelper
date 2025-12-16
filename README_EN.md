@@ -109,7 +109,39 @@ To enable auto-renewal and notifications, **you must set a Cron Trigger.**
 4.  **Cron schedule**: Enter `0,30 * * * *` exactly (This means check every 30 minutes. Do not change this logic!).
 5.  Click **Add Trigger**.
 
-### Method 3: Docker Deployment
+### Method 3: Deploy via GitHub Actions (Recommended)
+This method is ideal for users who prioritize **privacy** and want **automatic updates**. It eliminates the need to authorize third-party applications, keeping all your credentials securely stored within your own GitHub repository.
+
+1. **Fork the Repository**: Click the **Fork** button in the top-right corner of this page to copy the project to your own GitHub account.
+2. **Prepare Cloudflare Credentials**:
+* **Account ID**: Find this on the right side of the Cloudflare Workers dashboard overview.
+* **API Token**: Go to [My Profile](https://dash.cloudflare.com/profile/api-tokens) -> API Tokens -> Create Token -> Use the **Edit Cloudflare Workers** template -> Generate and copy the token.
+
+3. **Create KV Namespace**:
+* Create a new KV namespace (e.g., `RENEW_KV`) in the Cloudflare dashboard.
+* Copy the **ID** of this new KV.
+* Update the `wrangler.toml` file in your forked repository:
+  ```toml
+  [[kv_namespaces]]
+  binding = "RENEW_KV"
+  id = "<YOUR_KV_ID_HERE>"  # <--- You MUST replace this with your KV ID
+  ```
+
+4. **Configure GitHub Secrets**:
+* Go to your forked repository -> **Settings** -> **Secrets and variables** -> **Actions**.
+* Click **New repository secret** and add the following two secrets:
+* `CF_API_TOKEN`: Paste your Cloudflare API Token.
+* `CF_ACCOUNT_ID`: Paste your Cloudflare Account ID.
+
+5. **Enable and Deploy**:
+* Navigate to the **Actions** tab and click the green button **I understand my workflows...** to enable them.
+* Select **Deploy to Cloudflare Workers** from the sidebar, then click **Run workflow** to trigger the initial deployment manually.
+* **Updates**: When a new version is released, simply click **Sync Fork** on your GitHub repository page. GitHub Actions will detect the changes and automatically deploy the update to your Worker.
+
+6. **Final Step**:
+* Once the deployment is complete, log in to the Cloudflare dashboard and set the `AUTH_PASSWORD` environment variable (your login password).
+
+### Method 4: Docker Deployment
 
 RenewHelper can be easily deployed using Docker. This method simulates the Cloudflare Workers environment locally using Miniflare, ensuring your data remains private and self-hosted.
 

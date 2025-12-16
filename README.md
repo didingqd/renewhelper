@@ -108,7 +108,36 @@
 4.  **Cron schedule**: 准确输入 `0,30 * * * *` (代表 UTC 时间每天每个半点检查一次，不能改！！！)。
 5.  点击 **Add Trigger**。
 
-### 方式三：Docker部署
+### 方式三：GitHub Actions 部署 (进阶推荐)
+
+此方法适合希望**自动同步更新**且关注**隐私安全**的用户。您无需授权第三方应用，所有密钥均存储在您自己的 GitHub 仓库中。
+
+1.  **Fork 项目**：点击本项目右上角的 **Fork** 按钮，将仓库复制到您的 GitHub 账户。
+2.  **准备 Cloudflare 密钥**：
+    - **Account ID**：登录 Cloudflare Workers 首页右侧获取。
+    - **API Token**：[My Profile](https://dash.cloudflare.com/profile/api-tokens) -> API Tokens -> Create Token -> 选择 **Edit Cloudflare Workers** 模板 -> 生成并复制。
+3.  **创建 KV 数据库**：
+    - 在 Cloudflare 后台创建一个 KV 命名空间（如 `RENEW_KV`）。
+    - 复制该 KV 的 **ID**。
+    - 修改您 Fork 后的仓库中的 `wrangler.toml` 文件：
+      ```toml
+      [[kv_namespaces]]
+      binding = "RENEW_KV"
+      id = "这里填入你的KV ID"  # <--- 必须修改此处
+      ```
+4.  **配置 GitHub Secrets**：
+    - 进入您 Fork 的仓库 -> **Settings** -> **Secrets and variables** -> **Actions**。
+    - 点击 **New repository secret**，依次添加两个变量：
+        - `CF_API_TOKEN`: 填入您的 API Token。
+        - `CF_ACCOUNT_ID`: 填入您的 Account ID。
+5.  **启用并部署**：
+    - 进入 **Actions** 标签页，点击绿色按钮 **I understand my workflows...** 启用。
+    - 在左侧选择 **Deploy to Cloudflare Workers**，点击右侧 **Run workflow** 手动触发首次部署。
+    - **后续更新**：每当原作者发布新版本，您只需在 GitHub 点击 **Sync Fork**，Actions 会自动将最新代码部署到您的 Worker，全程自动化。
+6.  **最后一步**：
+    - 部署完成后，记得去 Cloudflare 后台设置环境变量 `AUTH_PASSWORD`（登录密码）。
+
+### 方式四：Docker部署
 
 RenewHelper 支持通过 Docker 进行一键私有化部署。该方案利用 Miniflare 在本地模拟 Cloudflare Workers 环境，配合 Node-cron 实现稳定的定时任务，确保数据完全掌握在您自己手中。
 
